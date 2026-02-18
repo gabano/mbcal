@@ -182,30 +182,35 @@
             });
         }
 
-        async function manageEventStatus(eventId) {
-            const pwd = prompt("Digite a senha:");
-            if (pwd !== "cancelar123") return;
+   async function manageEventStatus(eventId) {
+    const pwd = prompt("Senha de Coordenador:");
+    if (pwd !== "cancelar123") return;
 
-            const menu = "Escolha a ação:\n1. Marcar como Confirmada (Verde)\n2. Marcar como No Show (Preto)\n3. CANCELAR / Excluir (Vermelho)";
-            const choice = prompt(menu);
-            
-            let actionData = { action: 'updateStatus', eventId: eventId };
-            if (choice === "1") actionData.newStatus = "Confirmada";
-            else if (choice === "2") actionData.newStatus = "No show";
-            else if (choice === "3") actionData.newStatus = "Cancelada";
-            else return;
+    const menu = "O que deseja fazer?\n1. Marcar CONFIRMADA (Verde)\n2. Marcar NO SHOW (Preto)\n3. Marcar CANCELADA (Vermelho)\n4. EXCLUIR do Google Calendar";
+    const choice = prompt(menu);
+    
+    let payload = { eventId: eventId };
 
-            const res = await fetch(SCRIPT_URL, {
-                method: 'POST',
-                body: JSON.stringify(actionData)
-            });
-            
-            const result = await res.json();
-            if (result.success) {
-                alert("Status atualizado com sucesso!");
-                location.reload();
-            }
-        }
+    if (choice === "1") { payload.action = 'updateStatus'; payload.newStatus = 'Confirmada'; }
+    else if (choice === "2") { payload.action = 'updateStatus'; payload.newStatus = 'No show'; }
+    else if (choice === "3") { payload.action = 'updateStatus'; payload.newStatus = 'Cancelada'; }
+    else if (choice === "4") { 
+        if(confirm("Tem certeza que deseja apagar o evento do Google Calendar?")) {
+            payload.action = 'delete';
+        } else return;
+    } else return;
+
+    const res = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+    });
+    
+    const result = await res.json();
+    if (result.success) {
+        alert("Sincronizado com Google Calendar!");
+        location.reload();
+    }
+}
 
         function updateRoomVisuals(events) {
             const today = new Date().toISOString().split('T')[0];
