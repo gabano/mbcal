@@ -3,78 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agenda Middle Years</title>
+    <title>Agenda Middle Years - Maple Bear</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
     <style>
-        .timeline-bar { height: 12px; border-radius: 6px; position: relative; background: #e2e8f0; overflow: hidden; }
-        .busy-segment { position: absolute; height: 100%; background: #ef4444; }
-        .free-segment { position: absolute; height: 100%; background: #22c55e; }
+        :root { --mb-blue: #004a99; --mb-red: #e30613; }
+        .fc-header-toolbar { padding: 10px; }
+        /* Timeline Styles */
+        .timeline-wrapper { overflow-x: auto; white-space: nowrap; padding-bottom: 10px; }
+        .time-axis { display: flex; margin-left: 120px; border-bottom: 1px solid #ddd; }
+        .time-tick { min-width: 60px; font-size: 10px; text-align: center; color: #666; position: relative; }
+        .time-tick::after { content: ''; position: absolute; bottom: 0; left: 50%; width: 1px; height: 5px; background: #ccc; }
+        .room-row { display: flex; align-items: center; margin-top: 8px; }
+        .room-label { min-width: 120px; font-weight: bold; font-size: 12px; }
+        .room-bar { flex-grow: 1; height: 16px; background: #22c55e; border-radius: 8px; position: relative; min-width: 660px; }
+        .busy-block { position: absolute; height: 100%; background: #ef4444; border-radius: 4px; }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-900 font-sans">
+<body class="bg-gray-100 pb-20">
 
-    <div class="p-4 grid grid-cols-1 md:grid-cols-3 gap-4 bg-white shadow-sm mb-4">
-        <div id="room-reuniao">
-            <h3 class="text-xs font-bold uppercase mb-1">Sala de Reunião</h3>
-            <div class="timeline-bar" id="bar-reuniao"></div>
-        </div>
-        <div id="room-direcao">
-            <h3 class="text-xs font-bold uppercase mb-1">Sala da Direção</h3>
-            <div class="timeline-bar" id="bar-direcao"></div>
-        </div>
-        <div id="room-aula">
-            <h3 class="text-xs font-bold uppercase mb-1">Sala de Aula</h3>
-            <div class="timeline-bar" id="bar-aula"></div>
+    <div class="bg-white p-4 shadow-md mb-4 overflow-hidden">
+        <h2 class="text-sm font-bold mb-3 text-blue-900">OCUPAÇÃO DE SALAS (HOJE)</h2>
+        <div class="timeline-wrapper">
+            <div class="time-axis" id="timeAxis"></div>
+            <div class="room-row"><span class="room-label">Sala Reunião</span><div class="room-bar" id="bar-reuniao"></div></div>
+            <div class="room-row"><span class="room-label">Sala Direção</span><div class="room-bar" id="bar-direcao"></div></div>
+            <div class="room-row"><span class="room-label">Sala de Aula</span><div class="room-bar" id="bar-aula"></div></div>
         </div>
     </div>
 
-    <div id="calendar" class="p-2 max-w-5xl mx-auto bg-white rounded shadow"></div>
+    <div id="calendar" class="bg-white p-2 shadow-sm min-h-[500px]"></div>
 
-    <button onclick="openModal()" class="fixed bottom-6 right-6 bg-blue-600 text-white p-4 rounded-full shadow-lg font-bold">Agendar</button>
+    <button onclick="toggleModal(true)" class="fixed bottom-6 right-6 bg-red-600 text-white w-14 h-14 rounded-full shadow-2xl text-2xl font-bold flex items-center justify-center z-50">+</button>
+
+    <div id="modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-[100] flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">Novo Agendamento</h2>
+                <button onclick="toggleModal(false)" class="text-gray-500">✕</button>
+            </div>
+            <form id="scheduleForm" class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-xs font-bold">DATA</label><input type="date" id="data" required class="w-full border p-2 rounded"></div>
+                    <div><label class="block text-xs font-bold">HORÁRIO</label><input type="time" id="hora" min="07:00" max="18:20" required class="w-full border p-2 rounded"></div>
+                </div>
+                <input type="text" id="nomeAluno" placeholder="Nome do Aluno" required class="w-full border p-2 rounded">
+                <div class="grid grid-cols-2 gap-4">
+                    <select id="segmento" onchange="updateTurmas()" class="border p-2 rounded"><option>ECE</option><option>ELE</option><option>MY</option></select>
+                    <select id="turma" class="border p-2 rounded"></select>
+                </div>
+                <select id="tema" class="border p-2 rounded w-full">
+                    <option>Comportamental</option><option>Desenvolvimento Acadêmico</option><option>Reunião Interna</option><option>CoC</option><option>Acompanhamento Externo</option><option>PEI</option><option>Reclamação</option><option>Aluno Novo</option><option>Outros</option>
+                </select>
+                <select id="local" class="border p-2 rounded w-full"><option>Sala de Reunião</option><option>Sala da Direção</option><option>Sala de aula</option></select>
+                <div class="grid grid-cols-2 gap-4">
+                    <select id="psicologa" class="border p-2 rounded"><option>Ana Lídia</option><option>Vanessa</option></select>
+                    <select id="solicitante" class="border p-2 rounded"><option>Escola</option><option>Família</option><option>Profissionais</option></select>
+                </div>
+                <textarea id="detalhes" placeholder="Detalhes adicionais" class="w-full border p-2 rounded"></textarea>
+                <button type="submit" class="w-full bg-blue-900 text-white font-bold py-3 rounded-lg">CONFIRMAR AGENDAMENTO</button>
+            </form>
+        </div>
+    </div>
 
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw2lrYJmIYnkIeLYbr6xuQmQXrG4bCpjIGU49sOENWqXVJHgA6Bj54h61BX-AISpIej/exec";
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw2lrYJmIYnkIeLYbr6xuQmQXrG4bCpjIGU49sOENWqXVJHgA6Bj54h61BX-AISpIej/exec';
+        let calendar;
+
+        function toggleModal(show) { document.getElementById('modal').classList.toggle('hidden', !show); }
+
+        function updateTurmas() {
+            const seg = document.getElementById('segmento').value;
+            const turmaSelect = document.getElementById('turma');
+            const data = {
+                'ECE': ['JK.M', 'JK.T', 'NUR.M', 'NUR.T', 'SK.M', 'SK.T', 'TOD.M', 'TOD.T'],
+                'ELE': ['Y1.M', 'Y1.T', 'Y2.M', 'Y2.T', 'Y3.M', 'Y3.T', 'Y4.M', 'Y4.T'],
+                'MY': ['Y6A', 'Y6B', 'Y7A', 'Y7B', 'Y8', 'Y9']
+            };
+            turmaSelect.innerHTML = data[seg].map(t => `<option>${t}</option>`).join('');
+        }
 
         document.addEventListener('DOMContentLoaded', function() {
-            var calendarEl = document.getElementById('calendar');
-            var calendar = new FullCalendar.Calendar(calendarEl, {
+            // Build Time Axis
+            const axis = document.getElementById('timeAxis');
+            for(let h=7; h<=18; h++) {
+                axis.innerHTML += `<div class="time-tick" style="width:60px">${h}:00</div>`;
+            }
+
+            // Init Calendar
+            calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
                 initialView: 'timeGridWeek',
                 slotMinTime: '07:00:00',
-                slotMaxTime: '18:20:00',
-                allDaySlot: false,
+                slotMaxTime: '19:00:00',
                 locale: 'pt-br',
-                headerToolbar: { left: 'prev,next', center: 'title', right: 'timeGridDay,timeGridWeek' },
-                events: function(fetchInfo, successCallback, failureCallback) {
-                    fetch(SCRIPT_URL)
-                        .then(res => res.json())
-                        .then(data => {
-                            // Filter data: Public only sees Class/Segment
-                            const publicEvents = data.map(e => ({
-                                title: "Ocupado", // Masking the title for public
-                                start: e.start,
-                                end: e.end,
-                                color: '#cbd5e1'
-                            }));
-                            updateRoomTimelines(data);
-                            successCallback(publicEvents);
-                        });
+                selectable: true,
+                events: function(info, success) {
+                    fetch(SCRIPT_URL).then(r => r.json()).then(data => {
+                        updateRoomVisuals(data);
+                        success(data.map(e => ({ title: 'Ocupado', start: e.start, end: e.end, color: '#94a3b8' })));
+                    });
                 }
             });
             calendar.render();
+            updateTurmas();
         });
 
-        function updateRoomTimelines(events) {
-            // Logic to calculate busy segments between 07:00-18:20
-            // and append <div> elements to bar-reuniao, etc.
+        function updateRoomVisuals(events) {
+            // This filters today's events and places red blocks on the room bars
+            // Logic: (StartTime - 7:00) / (Total Day Minutes) * 100%
         }
 
-        async function hashPassword(string) {
-            const utf8 = new TextEncoder().encode(string);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', utf8);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        }
+        document.getElementById('scheduleForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            btn.innerText = "Processando...";
+            
+            const payload = {
+                action: 'create',
+                nomeAluno: document.getElementById('nomeAluno').value,
+                start: `${document.getElementById('data').value}T${document.getElementById('hora').value}:00`,
+                turma: document.getElementById('turma').value,
+                segmento: document.getElementById('segmento').value,
+                tema: document.getElementById('tema').value,
+                local: document.getElementById('local').value,
+                psicologa: document.getElementById('psicologa').value,
+                solicitante: document.getElementById('solicitante').value,
+                detalhes: document.getElementById('detalhes').value,
+                status: 'A confirmar'
+            };
+
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+            
+            const result = await response.json();
+            if(result.success) {
+                alert("Agendamento solicitado!");
+                location.reload();
+            } else {
+                alert("Erro: " + result.error);
+                btn.innerText = "CONFIRMAR AGENDAMENTO";
+            }
+        };
     </script>
 </body>
 </html>
