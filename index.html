@@ -115,23 +115,29 @@
             return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
-        async function press(val) {
-            if(inputPass.length >= 4) return;
-            inputPass += val;
-            updateDisplay();
-            if(inputPass.length === 4) {
-                const hash = await generateHash(inputPass);
-                // Valida localmente para liberar UI, o Google validará a ação real depois
-                if(hash === "858e3ca205260100466b04392477926b472855734563a94df6289d0442340578") {
-                    sessionStorage.setItem('mb_auth_hash', hash);
-                    sessionHash = hash;
-                    document.getElementById('auth-overlay').classList.add('hidden');
-                } else {
-                    alert("Senha Incorreta");
-                    resetPass();
-                }
-            }
+     async function press(val) {
+    if(inputPass.length >= 4) return;
+    inputPass += val;
+    updateDisplay();
+    
+    if(inputPass.length === 4) {
+        // Forçamos a senha para Maiúscula para bater com o Hash correto
+        const finalPass = inputPass.toUpperCase(); 
+        const hash = await generateHash(finalPass);
+        
+        // Este é o hash exato para "C159"
+        const correctHash = "858e3ca205260100466b04392477926b472855734563a94df6289d0442340578";
+        
+        if(hash === correctHash) {
+            sessionStorage.setItem('mb_auth_hash', hash);
+            sessionHash = hash;
+            document.getElementById('auth-overlay').classList.add('hidden');
+        } else {
+            alert("Senha Incorreta");
+            resetPass();
         }
+    }
+}
 
         function updateDisplay() {
             const dots = document.querySelectorAll('#pass-display div');
