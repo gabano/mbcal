@@ -3,192 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Maple Bear - Middle Years</title>
+    <title>Maple Bear - Agenda Middle Years</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --mb-blue: #004a99; --mb-red: #e30613; }
-        .day-container { background: white; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); margin-bottom: 2rem; border-left: 8px solid var(--mb-blue); }
-        .status-confirmada { border-left: 8px solid #22c55e; background: #f0fdf4; }
-        .status-noshow { border-left: 8px solid #4b5563; background: #f3f4f6; }
-        .status-cancelada { border-left: 8px solid #ef4444; background: #fef2f2; }
-        .status-aconfirmar { border-left: 8px solid #3b82f6; background: #eff6ff; }
-        .room-bar { height: 16px; background: #f1f5f9; border-radius: 8px; position: relative; min-width: 500px; }
-        .busy-room { position: absolute; height: 100%; background: #ef4444; border-radius: 4px; }
+        .day-card { background: white; border-radius: 24px; border-left: 10px solid var(--mb-blue); margin-bottom: 2rem; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1); }
+        .status-confirmada { border-left-color: #22c55e; background: #f0fdf4; }
+        .status-noshow { border-left-color: #4b5563; background: #f3f4f6; }
+        .status-cancelada { border-left-color: #ef4444; background: #fef2f2; }
+        .status-aconfirmar { border-left-color: #3b82f6; background: #eff6ff; }
+        .room-bar { height: 12px; background: #f1f5f9; border-radius: 6px; position: relative; min-width: 500px; }
+        .busy-now { position: absolute; height: 100%; background: var(--mb-red); border-radius: 4px; }
     </style>
 </head>
 <body class="bg-slate-50 p-4 pb-32">
 
-    <div class="max-w-2xl mx-auto bg-white p-5 rounded-3xl shadow-sm mb-8">
-        <h2 class="text-[10px] font-black uppercase text-slate-400 mb-4 tracking-widest">Ocupação Hoje</h2>
+    <div class="max-w-2xl mx-auto bg-white p-6 rounded-[32px] shadow-sm mb-10 border border-slate-100">
+        <h2 class="text-[10px] font-black uppercase text-slate-400 mb-4 tracking-[0.2em]">Ocupação das Salas (Hoje)</h2>
         <div class="overflow-x-auto">
-            <div class="flex ml-20 mb-1 border-b pb-1">
-                <script>for(let i=7;i<=18;i++) document.write(`<span class="min-w-[40px] text-[9px] text-slate-400">${i}h</span>`)</script>
+            <div class="flex ml-20 mb-2">
+                <script>for(let i=7;i<=18;i++) document.write(`<span class="min-w-[40px] text-[10px] text-slate-300 font-bold">${i}h</span>`)</script>
             </div>
-            <div class="space-y-3">
-                <div class="flex items-center gap-4"><span class="text-[10px] font-bold w-16">Reunião</span><div class="room-bar flex-1" id="bar-Sala de Reunião"></div></div>
-                <div class="flex items-center gap-4"><span class="text-[10px] font-bold w-16">Direção</span><div class="room-bar flex-1" id="bar-Sala da Direção"></div></div>
-                <div class="flex items-center gap-4"><span class="text-[10px] font-bold w-16">Aula</span><div class="room-bar flex-1" id="bar-Sala de aula"></div></div>
-            </div>
-        </div>
-    </div>
-
-    <div id="days-wrapper" class="max-w-2xl mx-auto"></div>
-
-    <div id="actionModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-end sm:items-center justify-center p-4">
-        <div class="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-md p-8 shadow-2xl">
-            <h3 class="text-xl font-black text-blue-900 mb-6">Gerenciar Evento</h3>
-            <div class="grid grid-cols-1 gap-3">
-                <button onclick="updateStatus('Confirmada')" class="bg-green-500 text-white py-4 rounded-2xl font-bold">Confirmada</button>
-                <button onclick="updateStatus('No show')" class="bg-gray-600 text-white py-4 rounded-2xl font-bold">No Show</button>
-                <button onclick="updateStatus('Cancelada')" class="bg-red-400 text-white py-4 rounded-2xl font-bold">Cancelada</button>
-                <button onclick="deleteEvent()" class="bg-red-700 text-white py-4 rounded-2xl font-bold uppercase text-[10px]">Excluir Definitivamente</button>
-                <button onclick="closeActionModal()" class="mt-2 text-slate-400 font-bold">Voltar</button>
+            <div class="space-y-4">
+                <div class="flex items-center gap-4"><span class="text-[10px] font-black w-16 text-slate-500">REUNIÃO</span><div class="room-bar flex-1" id="bar-Sala de Reunião"></div></div>
+                <div class="flex items-center gap-4"><span class="text-[10px] font-black w-16 text-slate-500">DIREÇÃO</span><div class="room-bar flex-1" id="bar-Sala da Direção"></div></div>
+                <div class="flex items-center gap-4"><span class="text-[10px] font-black w-16 text-slate-500">AULA</span><div class="room-bar flex-1" id="bar-Sala de aula"></div></div>
             </div>
         </div>
     </div>
 
-    <div id="createModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
-            <form id="scheduleForm" class="space-y-4">
-                <h2 class="text-2xl font-black text-blue-900 mb-4 tracking-tighter">Novo Agendamento</h2>
-                <input type="text" id="nomeAluno" placeholder="Nome do Aluno" required class="w-full bg-slate-50 p-4 rounded-2xl outline-none">
-                <div class="grid grid-cols-2 gap-4">
-                    <input type="date" id="data" required class="bg-slate-50 p-4 rounded-2xl outline-none">
-                    <input type="time" id="hora" required class="bg-slate-50 p-4 rounded-2xl outline-none">
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <select id="segmento" onchange="updateTurmas()" class="bg-slate-50 p-4 rounded-2xl outline-none"><option>ECE</option><option>ELE</option><option selected>MY</option></select>
-                    <select id="turma" class="bg-slate-50 p-4 rounded-2xl outline-none"></select>
-                </div>
-                <select id="psicologa" class="w-full bg-slate-50 p-4 rounded-2xl outline-none"><option value="Não">Psicóloga: Não</option><option value="Ana Lídia">Ana Lídia</option><option value="Vanessa">Vanessa</option></select>
-                <select id="local" class="w-full bg-slate-50 p-4 rounded-2xl outline-none"><option>Sala de Reunião</option><option>Sala da Direção</option><option>Sala de aula</option></select>
-                <button type="submit" class="w-full bg-blue-900 text-white font-black py-5 rounded-2xl">AGENDAR</button>
-                <button type="button" onclick="closeCreateModal()" class="w-full text-slate-400 font-bold">Voltar</button>
-            </form>
-        </div>
-    </div>
+    <div id="agenda-feed" class="max-w-2xl mx-auto space-y-6"></div>
 
-    <button onclick="openCreateModal()" class="fixed bottom-8 right-8 bg-blue-900 text-white w-16 h-16 rounded-full shadow-2xl text-4xl font-light z-50 flex items-center justify-center">＋</button>
+    <button onclick="document.getElementById('createModal').classList.remove('hidden')" class="fixed bottom-8 right-8 bg-blue-900 text-white w-16 h-16 rounded-full shadow-2xl text-4xl flex items-center justify-center z-50">＋</button>
 
     <script>
-        const SCRIPT_URL = 'SUA_URL_AQUI';
-        let currentEventId = null;
-
-        function openCreateModal() { document.getElementById('createModal').classList.remove('hidden'); updateTurmas(); }
-        function closeCreateModal() { document.getElementById('createModal').classList.add('hidden'); }
-        function closeActionModal() { document.getElementById('actionModal').classList.add('hidden'); }
-
-        async function handleEventClick(id) {
-            const pwd = prompt("Senha:");
-            if(pwd !== "cancelar123") return;
-            currentEventId = id;
-            document.getElementById('actionModal').classList.remove('hidden');
-        }
-
-        async function updateStatus(newStatus) {
-            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'updateStatus', eventId: currentEventId, newStatus: newStatus })});
-            location.reload();
-        }
-
-        async function deleteEvent() {
-            if(!confirm("Apagar evento?")) return;
-            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'delete', eventId: currentEventId })});
-            location.reload();
-        }
-
-        function getFullDate(dayIndex) {
-            const d = new Date();
-            const currentDay = d.getDay(); // 0 (Sun) to 6 (Sat)
-            const targetDay = dayIndex + 1; // Ajuste para Seg-Sex (1-5)
-            const diff = targetDay - currentDay;
-            d.setDate(d.getDate() + diff);
-            
-            const day = d.getDate().toString().padStart(2, '0');
-            const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-            const month = monthNames[d.getMonth()];
-            const year = d.getFullYear();
-            
-            return `${day} de ${month} de ${year}`;
-        }
-
-        function render(events) {
-            const wrapper = document.getElementById('days-wrapper');
-            const weekdays = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta'];
-            wrapper.innerHTML = '';
-
-            weekdays.forEach((dayName, i) => {
-                const fullDate = getFullDate(i);
-                const container = document.createElement('div');
-                container.className = 'day-container p-6';
-                container.innerHTML = `
-                    <div class="mb-6 border-b pb-2">
-                        <h3 class="text-xl font-black text-blue-900">${dayName}</h3>
-                        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">${fullDate}</p>
-                    </div>`;
-                
-                const dayEvents = events.filter(e => new Date(e.start).getDay() === i + 1);
-                dayEvents.sort((a,b) => new Date(a.start) - new Date(b.start)).forEach(e => {
-                    const time = new Date(e.start).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
-                    const statusClass = `status-${e.status.toLowerCase().replace(" ", "")}`;
-                    const slot = document.createElement('div');
-                    slot.className = `p-4 mb-4 rounded-2xl shadow-sm cursor-pointer ${statusClass}`;
-                    slot.innerHTML = `
-                        <div class="flex justify-between items-center">
-                            <span class="font-black text-lg">${time}</span>
-                            <span class="text-[9px] font-bold uppercase opacity-50">${e.status}</span>
-                        </div>
-                        <div class="text-sm font-bold opacity-80">${e.title}</div>
-                    `;
-                    slot.onclick = () => handleEventClick(e.id);
-                    container.appendChild(slot);
-                });
-                wrapper.appendChild(container);
-            });
-        }
-
-        function updateTurmas() {
-            const seg = document.getElementById('segmento').value;
-            const data = { 'ECE': ['JK.M', 'JK.T', 'NUR.M', 'NUR.T', 'SK.M', 'SK.T', 'TOD.M', 'TOD.T'], 'ELE': ['Y1.M', 'Y1.T', 'Y2.M', 'Y2.T', 'Y3.M', 'Y3.T', 'Y4.M', 'Y4.T'], 'MY': ['Y6A', 'Y6B', 'Y7A', 'Y7B', 'Y8', 'Y9'] };
-            document.getElementById('turma').innerHTML = data[seg].map(t => `<option>${t}</option>`).join('');
-        }
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyKibpEVNrijSTIMGY26KT34kGUmhzp4oghGyuedNSJ1K7k3G1CdQ1SEYN-8CPLBxTt/exec';
 
         async function load() {
-            const res = await fetch(SCRIPT_URL);
-            const events = await res.json();
-            render(events);
-            updateRoomVisuals(events);
+            const feed = document.getElementById('agenda-feed');
+            try {
+                const res = await fetch(SCRIPT_URL);
+                const events = await res.json();
+                
+                // Gerar próximos 30 dias úteis
+                const today = new Date();
+                feed.innerHTML = '';
+
+                for(let i = 0; i < 40; i++) {
+                    const d = new Date();
+                    d.setDate(today.getDate() + i);
+                    if(d.getDay() === 0 || d.getDay() === 6) continue; // Pula fins de semana
+
+                    const dateStr = d.toISOString().split('T')[0];
+                    const displayDate = d.toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric'});
+                    const weekDay = d.toLocaleDateString('pt-BR', { weekday: 'long' }).toUpperCase();
+
+                    const dayCard = document.createElement('div');
+                    dayCard.className = 'day-card p-6';
+                    dayCard.innerHTML = `
+                        <div class="mb-6 border-b border-slate-50 pb-2">
+                            <h3 class="text-xl font-black text-blue-900">${weekDay}</h3>
+                            <p class="text-[10px] font-bold text-slate-400 tracking-widest">${displayDate}</p>
+                        </div>
+                    `;
+
+                    const dayEvents = events.filter(e => e.start.startsWith(dateStr));
+                    if(dayEvents.length === 0) {
+                        dayCard.innerHTML += `<p class="text-slate-200 text-[10px] font-bold uppercase py-4">Sala Disponível</p>`;
+                    } else {
+                        dayEvents.sort((a,b) => a.start.localeCompare(b.start)).forEach(e => {
+                            const time = new Date(e.start).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+                            const cardStyle = `status-${e.status.toLowerCase().replace(" ", "")}`;
+                            dayCard.innerHTML += `
+                                <div onclick="handleEventClick('${e.id}')" class="p-4 mb-3 rounded-2xl cursor-pointer shadow-sm transition-all hover:scale-[1.02] ${cardStyle}">
+                                    <div class="flex justify-between items-center mb-1">
+                                        <span class="font-black text-lg">${time}</span>
+                                        <span class="text-[8px] font-black uppercase opacity-40">${e.status}</span>
+                                    </div>
+                                    <div class="text-sm font-bold text-slate-700">${e.title}</div>
+                                </div>
+                            `;
+                        });
+                    }
+                    feed.appendChild(dayCard);
+                }
+                updateRoomVisuals(events);
+            } catch(e) {
+                feed.innerHTML = `<p class="text-red-500">Erro de conexão com Google Script.</p>`;
+            }
         }
 
-        function updateRoomVisuals(events) {
-            const todayStr = new Date().toISOString().split('T')[0];
-            ['Sala de Reunião', 'Sala da Direção', 'Sala de aula'].forEach(room => {
-                const bar = document.getElementById(`bar-${room}`);
-                bar.innerHTML = '';
-                events.filter(e => e.start.startsWith(todayStr) && e.location === room).forEach(e => {
-                    const s = new Date(e.start);
-                    const eTime = new Date(e.end);
-                    const left = ((s.getHours() + s.getMinutes()/60) - 7) / 11.33 * 100;
-                    const width = (eTime - s) / (11.33 * 3600000) * 100;
-                    bar.innerHTML += `<div class="busy-room" style="left:${left}%; width:${width}%"></div>`;
-                });
-            });
-        }
-
-        document.getElementById('scheduleForm').onsubmit = async (e) => {
-            e.preventDefault();
-            const p = {
-                action: 'create',
-                nomeAluno: document.getElementById('nomeAluno').value,
-                start: `${document.getElementById('data').value}T${document.getElementById('hora').value}:00`,
-                turma: document.getElementById('turma').value,
-                segmento: document.getElementById('segmento').value,
-                psicologa: document.getElementById('psicologa').value,
-                local: document.getElementById('local').value
-            };
-            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(p) });
-            location.reload();
-        };
-
+        // ... Mantenha as funções handleEventClick, updateStatus, deleteEvent e scheduleForm.onsubmit ...
         load();
     </script>
 </body>
