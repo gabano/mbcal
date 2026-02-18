@@ -7,13 +7,11 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { --mb-blue: #004a99; --mb-red: #e30613; }
-        .day-container { background: white; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); margin-bottom: 2rem; }
-        /* Cores Dinâmicas dos Status */
+        .day-container { background: white; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); margin-bottom: 2rem; border-left: 8px solid var(--mb-blue); }
         .status-confirmada { border-left: 8px solid #22c55e; background: #f0fdf4; }
         .status-noshow { border-left: 8px solid #4b5563; background: #f3f4f6; }
         .status-cancelada { border-left: 8px solid #ef4444; background: #fef2f2; }
         .status-aconfirmar { border-left: 8px solid #3b82f6; background: #eff6ff; }
-        
         .room-bar { height: 16px; background: #f1f5f9; border-radius: 8px; position: relative; min-width: 500px; }
         .busy-room { position: absolute; height: 100%; background: #ef4444; border-radius: 4px; }
     </style>
@@ -21,7 +19,7 @@
 <body class="bg-slate-50 p-4 pb-32">
 
     <div class="max-w-2xl mx-auto bg-white p-5 rounded-3xl shadow-sm mb-8">
-        <h2 class="text-[10px] font-black uppercase text-slate-400 tracking-tighter mb-4">Status das Salas (Hoje)</h2>
+        <h2 class="text-[10px] font-black uppercase text-slate-400 mb-4 tracking-widest">Ocupação Hoje</h2>
         <div class="overflow-x-auto">
             <div class="flex ml-20 mb-1 border-b pb-1">
                 <script>for(let i=7;i<=18;i++) document.write(`<span class="min-w-[40px] text-[9px] text-slate-400">${i}h</span>`)</script>
@@ -36,18 +34,15 @@
 
     <div id="days-wrapper" class="max-w-2xl mx-auto"></div>
 
-    <button onclick="openCreateModal()" class="fixed bottom-8 right-8 bg-blue-900 text-white w-16 h-16 rounded-full shadow-2xl text-4xl font-light z-50 transition-transform active:scale-90 flex items-center justify-center">＋</button>
-
     <div id="actionModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-end sm:items-center justify-center p-4">
         <div class="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-md p-8 shadow-2xl">
             <h3 class="text-xl font-black text-blue-900 mb-6">Gerenciar Evento</h3>
             <div class="grid grid-cols-1 gap-3">
-                <button onclick="updateStatus('Confirmada')" class="bg-green-500 text-white py-4 rounded-2xl font-bold shadow-md">Confirmada (Verde)</button>
-                <button onclick="updateStatus('No show')" class="bg-gray-600 text-white py-4 rounded-2xl font-bold shadow-md">No Show (Preto)</button>
-                <button onclick="updateStatus('Cancelada')" class="bg-red-400 text-white py-4 rounded-2xl font-bold shadow-md">Cancelada (Vermelho)</button>
-                <div class="border-t my-2"></div>
-                <button onclick="deleteEvent()" class="bg-red-700 text-white py-4 rounded-2xl font-bold shadow-md uppercase text-xs tracking-widest">Excluir do Calendário</button>
-                <button onclick="closeActionModal()" class="mt-2 text-slate-400 font-bold py-2">Voltar</button>
+                <button onclick="updateStatus('Confirmada')" class="bg-green-500 text-white py-4 rounded-2xl font-bold">Confirmada</button>
+                <button onclick="updateStatus('No show')" class="bg-gray-600 text-white py-4 rounded-2xl font-bold">No Show</button>
+                <button onclick="updateStatus('Cancelada')" class="bg-red-400 text-white py-4 rounded-2xl font-bold">Cancelada</button>
+                <button onclick="deleteEvent()" class="bg-red-700 text-white py-4 rounded-2xl font-bold uppercase text-[10px]">Excluir Definitivamente</button>
+                <button onclick="closeActionModal()" class="mt-2 text-slate-400 font-bold">Voltar</button>
             </div>
         </div>
     </div>
@@ -55,35 +50,33 @@
     <div id="createModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
             <form id="scheduleForm" class="space-y-4">
-                <h2 class="text-2xl font-black text-blue-900 mb-4">Agendar</h2>
-                <input type="text" id="nomeAluno" placeholder="Nome do Aluno" required class="w-full bg-slate-50 p-4 rounded-2xl border-none outline-none">
+                <h2 class="text-2xl font-black text-blue-900 mb-4 tracking-tighter">Novo Agendamento</h2>
+                <input type="text" id="nomeAluno" placeholder="Nome do Aluno" required class="w-full bg-slate-50 p-4 rounded-2xl outline-none">
                 <div class="grid grid-cols-2 gap-4">
-                    <input type="date" id="data" required class="bg-slate-50 p-4 rounded-2xl border-none outline-none">
-                    <input type="time" id="hora" required class="bg-slate-50 p-4 rounded-2xl border-none outline-none">
+                    <input type="date" id="data" required class="bg-slate-50 p-4 rounded-2xl outline-none">
+                    <input type="time" id="hora" required class="bg-slate-50 p-4 rounded-2xl outline-none">
                 </div>
                 <div class="grid grid-cols-2 gap-4">
-                    <select id="segmento" onchange="updateTurmas()" class="bg-slate-50 p-4 rounded-2xl border-none outline-none"><option>ECE</option><option>ELE</option><option selected>MY</option></select>
-                    <select id="turma" class="bg-slate-50 p-4 rounded-2xl border-none outline-none"></select>
+                    <select id="segmento" onchange="updateTurmas()" class="bg-slate-50 p-4 rounded-2xl outline-none"><option>ECE</option><option>ELE</option><option selected>MY</option></select>
+                    <select id="turma" class="bg-slate-50 p-4 rounded-2xl outline-none"></select>
                 </div>
-                <select id="psicologa" class="w-full bg-slate-50 p-4 rounded-2xl border-none outline-none">
-                    <option value="Não">Psicóloga: Não</option><option value="Ana Lídia">Ana Lídia</option><option value="Vanessa">Vanessa</option>
-                </select>
-                <select id="local" class="w-full bg-slate-50 p-4 rounded-2xl border-none outline-none">
-                    <option>Sala de Reunião</option><option>Sala da Direção</option><option>Sala de aula</option>
-                </select>
-                <button type="submit" class="w-full bg-blue-900 text-white font-black py-5 rounded-2xl">CRIAR AGENDAMENTO</button>
-                <button type="button" onclick="closeCreateModal()" class="w-full text-slate-400 font-bold">Cancelar</button>
+                <select id="psicologa" class="w-full bg-slate-50 p-4 rounded-2xl outline-none"><option value="Não">Psicóloga: Não</option><option value="Ana Lídia">Ana Lídia</option><option value="Vanessa">Vanessa</option></select>
+                <select id="local" class="w-full bg-slate-50 p-4 rounded-2xl outline-none"><option>Sala de Reunião</option><option>Sala da Direção</option><option>Sala de aula</option></select>
+                <button type="submit" class="w-full bg-blue-900 text-white font-black py-5 rounded-2xl">AGENDAR</button>
+                <button type="button" onclick="closeCreateModal()" class="w-full text-slate-400 font-bold">Voltar</button>
             </form>
         </div>
     </div>
 
+    <button onclick="openCreateModal()" class="fixed bottom-8 right-8 bg-blue-900 text-white w-16 h-16 rounded-full shadow-2xl text-4xl font-light z-50 flex items-center justify-center">＋</button>
+
     <script>
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw2lrYJmIYnkIeLYbr6xuQmQXrG4bCpjIGU49sOENWqXVJHgA6Bj54h61BX-AISpIej/exec';
+        const SCRIPT_URL = 'SUA_URL_AQUI';
         let currentEventId = null;
 
         function openCreateModal() { document.getElementById('createModal').classList.remove('hidden'); updateTurmas(); }
         function closeCreateModal() { document.getElementById('createModal').classList.add('hidden'); }
-        function closeActionModal() { document.getElementById('actionModal').classList.add('hidden'); currentEventId = null; }
+        function closeActionModal() { document.getElementById('actionModal').classList.add('hidden'); }
 
         async function handleEventClick(id) {
             const pwd = prompt("Senha:");
@@ -93,14 +86,29 @@
         }
 
         async function updateStatus(newStatus) {
-            const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'updateStatus', eventId: currentEventId, newStatus: newStatus })});
+            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'updateStatus', eventId: currentEventId, newStatus: newStatus })});
             location.reload();
         }
 
         async function deleteEvent() {
-            if(!confirm("Apagar para sempre?")) return;
+            if(!confirm("Apagar evento?")) return;
             await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'delete', eventId: currentEventId })});
             location.reload();
+        }
+
+        function getFullDate(dayIndex) {
+            const d = new Date();
+            const currentDay = d.getDay(); // 0 (Sun) to 6 (Sat)
+            const targetDay = dayIndex + 1; // Ajuste para Seg-Sex (1-5)
+            const diff = targetDay - currentDay;
+            d.setDate(d.getDate() + diff);
+            
+            const day = d.getDate().toString().padStart(2, '0');
+            const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+            const month = monthNames[d.getMonth()];
+            const year = d.getFullYear();
+            
+            return `${day} de ${month} de ${year}`;
         }
 
         function render(events) {
@@ -108,10 +116,15 @@
             const weekdays = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta'];
             wrapper.innerHTML = '';
 
-            weekdays.forEach((day, i) => {
+            weekdays.forEach((dayName, i) => {
+                const fullDate = getFullDate(i);
                 const container = document.createElement('div');
                 container.className = 'day-container p-6';
-                container.innerHTML = `<h3 class="text-xl font-black text-blue-900 mb-6 border-b pb-2">${day}</h3>`;
+                container.innerHTML = `
+                    <div class="mb-6 border-b pb-2">
+                        <h3 class="text-xl font-black text-blue-900">${dayName}</h3>
+                        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">${fullDate}</p>
+                    </div>`;
                 
                 const dayEvents = events.filter(e => new Date(e.start).getDay() === i + 1);
                 dayEvents.sort((a,b) => new Date(a.start) - new Date(b.start)).forEach(e => {
@@ -122,9 +135,9 @@
                     slot.innerHTML = `
                         <div class="flex justify-between items-center">
                             <span class="font-black text-lg">${time}</span>
-                            <span class="text-[9px] font-bold uppercase opacity-50 tracking-tighter">${e.status}</span>
+                            <span class="text-[9px] font-bold uppercase opacity-50">${e.status}</span>
                         </div>
-                        <div class="text-sm font-bold opacity-80">${e.title.split(' - ')[1]} (${e.title.split(' - ')[0]})</div>
+                        <div class="text-sm font-bold opacity-80">${e.title}</div>
                     `;
                     slot.onclick = () => handleEventClick(e.id);
                     container.appendChild(slot);
@@ -143,7 +156,22 @@
             const res = await fetch(SCRIPT_URL);
             const events = await res.json();
             render(events);
-            // Room bars update logic same as before...
+            updateRoomVisuals(events);
+        }
+
+        function updateRoomVisuals(events) {
+            const todayStr = new Date().toISOString().split('T')[0];
+            ['Sala de Reunião', 'Sala da Direção', 'Sala de aula'].forEach(room => {
+                const bar = document.getElementById(`bar-${room}`);
+                bar.innerHTML = '';
+                events.filter(e => e.start.startsWith(todayStr) && e.location === room).forEach(e => {
+                    const s = new Date(e.start);
+                    const eTime = new Date(e.end);
+                    const left = ((s.getHours() + s.getMinutes()/60) - 7) / 11.33 * 100;
+                    const width = (eTime - s) / (11.33 * 3600000) * 100;
+                    bar.innerHTML += `<div class="busy-room" style="left:${left}%; width:${width}%"></div>`;
+                });
+            });
         }
 
         document.getElementById('scheduleForm').onsubmit = async (e) => {
