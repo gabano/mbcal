@@ -3,106 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agenda Middle Years - Maple Bear</title>
+    <title>Agenda Middle Years</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
     <style>
         :root { --mb-blue: #004a99; --mb-red: #e30613; }
-        
-        /* Remove weekends and adjust grid */
-        .fc-day-sat, .fc-day-sun { display: none !important; }
-        
-        /* Custom Scrollable Day Containers */
-        .fc-scroller { overflow-y: auto !important; height: auto !important; max-height: 60vh; }
-        .fc-timegrid-slot { height: 50px !important; } /* Taller slots for easier clicking */
-
-        /* Room Timeline Styling */
-        .timeline-wrapper { overflow-x: auto; white-space: nowrap; background: #fff; padding: 15px; border-radius: 12px; }
+        .day-container { min-height: 400px; background: white; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border-left: 6px solid var(--mb-blue); }
+        .timeline-wrapper { overflow-x: auto; white-space: nowrap; background: #fff; padding: 15px; border-radius: 12px; margin-bottom: 10px;}
         .time-axis { display: flex; margin-left: 100px; border-bottom: 1px solid #eee; }
         .time-tick { min-width: 50px; font-size: 10px; color: #999; }
         .room-row { display: flex; align-items: center; margin-top: 10px; }
-        .room-label { min-width: 100px; font-weight: bold; font-size: 11px; color: var(--mb-blue); }
-        .room-bar { flex-grow: 1; height: 20px; background: #f0fdf4; border-radius: 10px; position: relative; min-width: 560px; border: 1px solid #dcfce7; }
-        .busy-block { position: absolute; height: 100%; background: #fee2e2; border-left: 4px solid var(--mb-red); font-size: 9px; color: #b91c1c; display: flex; align-items: center; padding-left: 5px; }
+        .room-label { min-width: 100px; font-weight: bold; font-size: 11px; }
+        .room-bar { flex-grow: 1; height: 20px; background: #f0fdf4; border-radius: 10px; position: relative; min-width: 560px; }
+        .busy-block { position: absolute; height: 100%; background: #fee2e2; border-left: 3px solid var(--mb-red); font-size: 9px; display: flex; align-items: center; padding-left: 4px; }
+        .event-slot { background: #f1f5f9; border-radius: 6px; margin: 4px 0; padding: 8px; border-left: 4px solid #94a3b8; }
     </style>
 </head>
-<body class="bg-gray-50 pb-24">
+<body class="bg-gray-100 p-4 pb-32">
 
-    <div class="p-4 bg-white shadow-sm mb-4 border-b-2 border-blue-900">
-        <h2 class="text-xs font-black uppercase mb-3 text-gray-500 tracking-tighter">Ocupação das Salas (Hoje)</h2>
-        <div class="timeline-wrapper">
-            <div class="time-axis" id="timeAxis"></div>
-            <div id="room-bars">
-                <div class="room-row"><span class="room-label">Reunião</span><div class="room-bar" id="bar-Sala de Reunião"></div></div>
-                <div class="room-row"><span class="room-label">Direção</span><div class="room-bar" id="bar-Sala da Direção"></div></div>
-                <div class="room-row"><span class="room-label">Aula</span><div class="room-bar" id="bar-Sala de aula"></div></div>
-            </div>
+    <div class="p-4 bg-white rounded-xl shadow-sm mb-6">
+        <h2 class="text-xs font-black uppercase mb-3 text-gray-500">Ocupação Hoje</h2>
+        <div class="timeline-wrapper" id="roomTimeline">
+             <div class="time-axis" id="timeAxis"></div>
+             <div class="room-row"><span class="room-label">Reunião</span><div class="room-bar" id="bar-Sala de Reunião"></div></div>
+             <div class="room-row"><span class="room-label">Direção</span><div class="room-bar" id="bar-Sala da Direção"></div></div>
+             <div class="room-row"><span class="room-label">Aula</span><div class="room-bar" id="bar-Sala de aula"></div></div>
         </div>
     </div>
 
-    <div id="calendar" class="bg-white p-2 shadow-sm rounded-lg mx-2"></div>
+    <div id="days-wrapper" class="space-y-6">
+        </div>
 
     <div class="fixed bottom-6 right-6 flex flex-col gap-3 z-50">
-        <button onclick="requestCancel()" class="bg-gray-800 text-white px-4 py-2 rounded-full shadow-lg text-xs font-bold uppercase tracking-widest">Cancelar</button>
+        <button onclick="requestCancel()" class="bg-black text-white px-6 py-3 rounded-full shadow-lg text-xs font-bold uppercase tracking-widest">Cancelar</button>
         <button onclick="toggleModal(true)" class="bg-red-600 text-white w-16 h-16 rounded-full shadow-2xl text-3xl font-bold flex items-center justify-center">＋</button>
+    </div>
+
+    <div id="modal" class="hidden fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-lg p-6 overflow-y-auto max-h-[90vh]">
+            <h2 class="text-xl font-bold mb-4">Novo Agendamento</h2>
+            <form id="scheduleForm" class="space-y-4">
+                <input type="text" id="nomeAluno" placeholder="Nome do Aluno" required class="w-full border p-3 rounded-xl">
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="date" id="data" required class="border p-3 rounded-xl">
+                    <input type="time" id="hora" min="07:00" max="18:20" required class="border p-3 rounded-xl">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <select id="segmento" onchange="updateTurmas()" class="border p-3 rounded-xl"><option>ECE</option><option>ELE</option><option>MY</option></select>
+                    <select id="turma" class="border p-3 rounded-xl"></select>
+                </div>
+                <select id="local" class="border p-3 rounded-xl w-full"><option>Sala de Reunião</option><option>Sala da Direção</option><option>Sala de aula</option></select>
+                <select id="tema" class="border p-3 rounded-xl w-full"><option>Comportamental</option><option>Desenvolvimento Acadêmico</option><option>Reunião Interna</option><option>Outros</option></select>
+                <button type="submit" class="w-full bg-blue-900 text-white font-bold py-4 rounded-xl">CONFIRMAR</button>
+                <button type="button" onclick="toggleModal(false)" class="w-full text-gray-500 text-sm">Voltar</button>
+            </form>
+        </div>
     </div>
 
     <script>
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw2lrYJmIYnkIeLYbr6xuQmQXrG4bCpjIGU49sOENWqXVJHgA6Bj54h61BX-AISpIej/exec';
-        let calendar;
+        
+        function toggleModal(show) { document.getElementById('modal').classList.toggle('hidden', !show); }
+
+        function updateTurmas() {
+            const seg = document.getElementById('segmento').value;
+            const data = {
+                'ECE': ['JK.M', 'JK.T', 'NUR.M', 'NUR.T', 'SK.M', 'SK.T', 'TOD.M', 'TOD.T'],
+                'ELE': ['Y1.M', 'Y1.T', 'Y2.M', 'Y2.T', 'Y3.M', 'Y3.T', 'Y4.M', 'Y4.T'],
+                'MY': ['Y6A', 'Y6B', 'Y7A', 'Y7B', 'Y8', 'Y9']
+            };
+            document.getElementById('turma').innerHTML = data[seg].map(t => `<option>${t}</option>`).join('');
+        }
+
+        async function requestCancel() {
+            const pwd = prompt("Senha:");
+            if(pwd !== "cancelar123") return alert("Erro");
+            const id = prompt("ID do Evento:");
+            const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'cancel', eventId: id })});
+            alert("Processado"); location.reload();
+        }
+
+        async function loadData() {
+            const res = await fetch(SCRIPT_URL);
+            const events = await res.json();
+            renderContainers(events);
+            updateRoomVisuals(events);
+        }
+
+        function renderContainers(events) {
+            const wrapper = document.getElementById('days-wrapper');
+            const weekdays = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta'];
+            wrapper.innerHTML = '';
+
+            weekdays.forEach((day, index) => {
+                const container = document.createElement('div');
+                container.className = 'day-container p-6';
+                container.innerHTML = `<h3 class="text-xl font-black text-blue-900 mb-4">${day}</h3>`;
+                
+                // Filter events for this weekday (simplified logic)
+                const dayEvents = events.filter(e => new Date(e.start).getDay() === index + 1);
+                
+                if(dayEvents.length === 0) {
+                    container.innerHTML += `<p class="text-gray-400 text-sm italic">Nenhum compromisso marcado.</p>`;
+                } else {
+                    dayEvents.forEach(e => {
+                        const time = new Date(e.start).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+                        container.innerHTML += `<div class="event-slot"><span class="font-bold">${time}</span> - OCUPADO</div>`;
+                    });
+                }
+                wrapper.appendChild(container);
+            });
+        }
 
         function updateRoomVisuals(events) {
             const today = new Date().toISOString().split('T')[0];
-            const startDay = 7; 
-            const totalHours = 11.33; 
-            
             ['Sala de Reunião', 'Sala da Direção', 'Sala de aula'].forEach(room => {
                 const bar = document.getElementById(`bar-${room}`);
-                if(!bar) return;
                 bar.innerHTML = '';
                 events.filter(e => e.start.startsWith(today) && e.location === room).forEach(e => {
                     const s = new Date(e.start);
-                    const eTime = new Date(e.end);
-                    const left = ((s.getHours() + s.getMinutes()/60) - startDay) / totalHours * 100;
-                    const width = (eTime - s) / (totalHours * 3600000) * 100;
-                    bar.innerHTML += `<div class="busy-block" style="left:${left}%; width:${width}%">BUSY</div>`;
+                    const left = ((s.getHours() + s.getMinutes()/60) - 7) / 11.33 * 100;
+                    bar.innerHTML += `<div class="busy-block" style="left:${left}%; width:9%">BUSY</div>`;
                 });
             });
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            const axis = document.getElementById('timeAxis');
-            for(let h=7; h<=18; h++) axis.innerHTML += `<div class="time-tick">${h}:00</div>`;
+        document.getElementById('scheduleForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const payload = {
+                action: 'create',
+                nomeAluno: document.getElementById('nomeAluno').value,
+                start: `${document.getElementById('data').value}T${document.getElementById('hora').value}:00`,
+                turma: document.getElementById('turma').value,
+                segmento: document.getElementById('segmento').value,
+                local: document.getElementById('local').value,
+                status: 'A confirmar'
+            };
+            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+            alert("Sucesso!"); location.reload();
+        };
 
-            calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
-                initialView: 'timeGridWeek',
-                weekends: false, // Hides Saturday and Sunday
-                slotMinTime: '07:00:00',
-                slotMaxTime: '18:20:00',
-                locale: 'pt-br',
-                allDaySlot: false,
-                height: 'auto',
-                handleWindowResize: true,
-                expandRows: true,
-                headerToolbar: { left: 'prev,next', center: 'title', right: '' },
-                events: function(info, success) {
-                    fetch(SCRIPT_URL).then(r => r.json()).then(data => {
-                        updateRoomVisuals(data);
-                        // PUBLIC VIEW: Only show Busy Blocks
-                        success(data.map(e => ({
-                            title: 'OCUPADO',
-                            start: e.start,
-                            end: e.end,
-                            color: '#94a3b8'
-                        })));
-                    });
-                }
-            });
-            calendar.render();
-            updateTurmas();
-        });
-
-        // Hashing and Form logic same as before...
+        // Initialize
+        for(let h=7; h<=18; h++) document.getElementById('timeAxis').innerHTML += `<div class="time-tick">${h}:00</div>`;
+        updateTurmas();
+        loadData();
     </script>
 </body>
 </html>
