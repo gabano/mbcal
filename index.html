@@ -114,23 +114,23 @@
             return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
-        async function press(val) {
-            if(inputPass.length >= 4) return;
-            inputPass += val;
-            updateDisplay();
-            if(inputPass.length === 4) {
-                const hash = await generateHash(inputPass);
-                // Hash para SENHA
-                if(hash === "8091f09c0d383794b9187e07672da1259e887f48b8c566580e60824985220c32") {
-                    sessionStorage.setItem('mb_auth_hash', hash);
-                    sessionHash = hash;
-                    document.getElementById('auth-overlay').style.display = 'none';
-                } else {
-                    alert("Senha Incorreta");
-                    resetPass();
-                }
-            }
+      async function press(val) {
+    if(inputPass.length >= 4) return;
+    inputPass += val;
+    updateDisplay();
+    
+    if(inputPass.length === 4) {
+        // Comparação direta sem HASH para evitar erro de algoritmo
+        if(inputPass === "5067") {
+            sessionStorage.setItem('mb_auth_hash', inputPass);
+            sessionHash = inputPass;
+            document.getElementById('auth-overlay').style.display = 'none';
+        } else {
+            alert("Senha Incorreta");
+            resetPass();
         }
+    }
+}
 
         function updateDisplay() {
             const dots = document.querySelectorAll('#pass-display div');
