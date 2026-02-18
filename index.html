@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agenda Middle Years</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
+    <style>
+        .timeline-bar { height: 12px; border-radius: 6px; position: relative; background: #e2e8f0; overflow: hidden; }
+        .busy-segment { position: absolute; height: 100%; background: #ef4444; }
+        .free-segment { position: absolute; height: 100%; background: #22c55e; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900 font-sans">
+
+    <div class="p-4 grid grid-cols-1 md:grid-cols-3 gap-4 bg-white shadow-sm mb-4">
+        <div id="room-reuniao">
+            <h3 class="text-xs font-bold uppercase mb-1">Sala de Reunião</h3>
+            <div class="timeline-bar" id="bar-reuniao"></div>
+        </div>
+        <div id="room-direcao">
+            <h3 class="text-xs font-bold uppercase mb-1">Sala da Direção</h3>
+            <div class="timeline-bar" id="bar-direcao"></div>
+        </div>
+        <div id="room-aula">
+            <h3 class="text-xs font-bold uppercase mb-1">Sala de Aula</h3>
+            <div class="timeline-bar" id="bar-aula"></div>
+        </div>
+    </div>
+
+    <div id="calendar" class="p-2 max-w-5xl mx-auto bg-white rounded shadow"></div>
+
+    <button onclick="openModal()" class="fixed bottom-6 right-6 bg-blue-600 text-white p-4 rounded-full shadow-lg font-bold">Agendar</button>
+
+    <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw2lrYJmIYnkIeLYbr6xuQmQXrG4bCpjIGU49sOENWqXVJHgA6Bj54h61BX-AISpIej/exec";
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'timeGridWeek',
+                slotMinTime: '07:00:00',
+                slotMaxTime: '18:20:00',
+                allDaySlot: false,
+                locale: 'pt-br',
+                headerToolbar: { left: 'prev,next', center: 'title', right: 'timeGridDay,timeGridWeek' },
+                events: function(fetchInfo, successCallback, failureCallback) {
+                    fetch(SCRIPT_URL)
+                        .then(res => res.json())
+                        .then(data => {
+                            // Filter data: Public only sees Class/Segment
+                            const publicEvents = data.map(e => ({
+                                title: "Ocupado", // Masking the title for public
+                                start: e.start,
+                                end: e.end,
+                                color: '#cbd5e1'
+                            }));
+                            updateRoomTimelines(data);
+                            successCallback(publicEvents);
+                        });
+                }
+            });
+            calendar.render();
+        });
+
+        function updateRoomTimelines(events) {
+            // Logic to calculate busy segments between 07:00-18:20
+            // and append <div> elements to bar-reuniao, etc.
+        }
+
+        async function hashPassword(string) {
+            const utf8 = new TextEncoder().encode(string);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', utf8);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+    </script>
+</body>
+</html>
