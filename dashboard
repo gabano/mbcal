@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Maple Bear - Middle Years</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root { --mb-brand: #990b02; }
+        body { background-color: #f8fafc; font-family: ui-sans-serif, system-ui, sans-serif; overflow: hidden; }
+        .brand-bg { background-color: var(--mb-brand); }
+        .card { background: white; border-radius: 32px; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.05); }
+        
+        /* Animação suave para a barra de progresso */
+        #progress-bar { transition: width 1s linear; }
+    </style>
+</head>
+<body class="p-8 h-screen flex flex-col gap-6">
+
+    <header class="brand-bg text-white p-8 rounded-[40px] flex justify-between items-center shadow-2xl">
+        <div>
+            <h1 id="current-date" class="text-2xl font-light opacity-90 uppercase tracking-widest">---</h1>
+            <p id="current-time" class="text-7xl font-black">00:00</p>
+        </div>
+        <div class="text-right">
+            <p class="text-xl font-bold opacity-80">Maple Bear</p>
+            <p class="text-3xl font-black uppercase tracking-tighter">Middle Years</p>
+        </div>
+    </header>
+
+    <main class="grid grid-cols-12 gap-6 flex-1 overflow-hidden">
+        
+        <div class="col-span-7 flex flex-col gap-6">
+            
+            <div id="now-container" class="card p-8 flex-1 border-l-[16px] border-slate-200 flex flex-col justify-between">
+                <div>
+                    <h2 class="text-xs font-black uppercase text-slate-400 tracking-[0.3em] mb-4">Acontecendo Agora</h2>
+                    <div id="now-content">
+                        <p class="text-4xl font-black text-slate-300 italic">Disponível</p>
+                    </div>
+                </div>
+
+                <div id="progress-wrapper" class="hidden mt-8">
+                    <div class="flex justify-between text-[10px] font-black text-slate-400 mb-2">
+                        <span id="start-label">00:00</span>
+                        <span id="progress-text">EM CURSO</span>
+                        <span id="end-label">00:00</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-4 rounded-full overflow-hidden">
+                        <div id="progress-bar" class="bg-[#990b02] h-full w-0"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card p-8 h-[40%]">
+                <h2 class="text-xs font-black uppercase text-slate-400 tracking-[0.3em] mb-4">Próxim
