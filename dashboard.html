@@ -3,55 +3,109 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Maple Bear - Middle Years</title>
+    <title>Dashboard Maple Bear</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --mb-brand: #990b02; }
         body { background-color: #f8fafc; font-family: ui-sans-serif, system-ui, sans-serif; overflow: hidden; }
-        .brand-bg { background-color: var(--mb-brand); }
         .card { background: white; border-radius: 32px; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.05); }
-        
-        /* Animação suave para a barra de progresso */
         #progress-bar { transition: width 1s linear; }
     </style>
 </head>
 <body class="p-8 h-screen flex flex-col gap-6">
 
-    <header class="brand-bg text-white p-8 rounded-[40px] flex justify-between items-center shadow-2xl">
+    <header class="bg-[#990b02] text-white p-8 rounded-[40px] flex justify-between items-center shadow-2xl">
         <div>
             <h1 id="current-date" class="text-2xl font-light opacity-90 uppercase tracking-widest">---</h1>
             <p id="current-time" class="text-7xl font-black">00:00</p>
         </div>
-        <div class="text-right">
+        <div class="text-right uppercase">
             <p class="text-xl font-bold opacity-80">Maple Bear</p>
-            <p class="text-3xl font-black uppercase tracking-tighter">Middle Years</p>
+            <p class="text-3xl font-black tracking-tighter">Middle Years</p>
         </div>
     </header>
 
     <main class="grid grid-cols-12 gap-6 flex-1 overflow-hidden">
-        
         <div class="col-span-7 flex flex-col gap-6">
-            
             <div id="now-container" class="card p-8 flex-1 border-l-[16px] border-slate-200 flex flex-col justify-between">
                 <div>
-                    <h2 class="text-xs font-black uppercase text-slate-400 tracking-[0.3em] mb-4">Acontecendo Agora</h2>
-                    <div id="now-content">
-                        <p class="text-4xl font-black text-slate-300 italic">Disponível</p>
-                    </div>
+                    <h2 class="text-xs font-black uppercase text-slate-400 mb-4 tracking-widest">Acontecendo Agora</h2>
+                    <div id="now-content"><p class="text-4xl font-black text-slate-300 italic uppercase">Disponível</p></div>
                 </div>
-
                 <div id="progress-wrapper" class="hidden mt-8">
                     <div class="flex justify-between text-[10px] font-black text-slate-400 mb-2">
-                        <span id="start-label">00:00</span>
-                        <span id="progress-text">EM CURSO</span>
-                        <span id="end-label">00:00</span>
+                        <span id="start-label">00:00</span><span>EM CURSO</span><span id="end-label">00:00</span>
                     </div>
                     <div class="w-full bg-slate-100 h-4 rounded-full overflow-hidden">
                         <div id="progress-bar" class="bg-[#990b02] h-full w-0"></div>
                     </div>
                 </div>
             </div>
-
             <div class="card p-8 h-[40%]">
-                <h2 class="text-xs font-black uppercase text-slate-400 tracking-[0.3em] mb-4">Próxim
+                <h2 class="text-xs font-black uppercase text-slate-400 mb-4 tracking-widest">Próximos Compromissos</h2>
+                <div id="next-meetings" class="space-y-3"></div>
+            </div>
+        </div>
+
+        <div class="col-span-5 card p-8 flex flex-col items-center justify-center">
+            <h2 class="text-xs font-black uppercase text-slate-400 mb-8 tracking-widest">Estatísticas por Segmento</h2>
+            <canvas id="segmentChart" class="max-h-[300px]"></canvas>
+            <div class="mt-8 text-center">
+                <p class="text-5xl font-black text-[#990b02]" id="total-val">0</p>
+                <p class="text-[10px] font-bold text-slate-400 uppercase">Atendimentos Totais</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbM7Eq6n5OWlY8OorTMFnEFfaBBg5Wi5COGYI3vmMJvbjMo27aDVezzH97KejUJ3x6wVQ/exec';
+        let chart, currentEvent = null;
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('current-time').innerText = now.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+            document.getElementById('current-date').innerText = now.toLocaleDateString('pt-BR', {weekday: 'long', day: '2-digit', month: 'long'});
+            if(currentEvent) {
+                const start = new Date(currentEvent.start), end = new Date(currentEvent.end);
+                const percent = Math.min(Math.max(((now - start) / (end - start)) * 100, 0), 100);
+                document.getElementById('progress-bar').style.width = percent + '%';
+            }
+        }
+
+        async function fetchData() {
+            const res = await fetch(SCRIPT_URL);
+            const events = await res.json();
+            const now = new Date();
+            const todayStr = now.toISOString().split('T')[0];
+            const todayEvents = events.filter(e => e.start.startsWith(todayStr)).sort((a,b) => a.start.localeCompare(b.start));
+
+            currentEvent = todayEvents.find(e => now >= new Date(e.start) && now <= new Date(e.end));
+            
+            const cont = document.getElementById('now-container'), wrapper = document.getElementById('progress-wrapper');
+            if (currentEvent) {
+                cont.style.borderLeftColor = '#990b02'; wrapper.classList.remove('hidden');
+                document.getElementById('start-label').innerText = new Date(currentEvent.start).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+                document.getElementById('end-label').innerText = new Date(currentEvent.end).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+                document.getElementById('now-content').innerHTML = `<p class="text-[#990b02] text-sm font-black uppercase mb-1">${currentEvent.location}</p><h3 class="text-4xl font-black text-slate-800 leading-tight uppercase">${currentEvent.title}</h3>`;
+            } else {
+                cont.style.borderLeftColor = '#e2e8f0'; wrapper.classList.add('hidden');
+                document.getElementById('now-content').innerHTML = `<p class="text-4xl font-black text-slate-300 italic uppercase">Disponível</p>`;
+            }
+
+            const upcoming = todayEvents.filter(e => new Date(e.start) > now).slice(0, 3);
+            document.getElementById('next-meetings').innerHTML = upcoming.map(e => `<div class="flex justify-between items-center p-4 bg-slate-50 rounded-2xl border-l-4 border-slate-300"><div><p class="text-sm font-black text-slate-800">${e.title}</p><p class="text-[9px] font-bold text-slate-400 uppercase">${e.location}</p></div><p class="text-lg font-black text-[#990b02]">${new Date(e.start).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}</p></div>`).join('') || '<p class="text-slate-200 font-bold uppercase text-xs">Sem mais reuniões</p>';
+
+            const stats = { 'ECE': 0, 'ELE': 0, 'MY': 0 };
+            events.forEach(e => { if(e.description.includes('ECE')) stats['ECE']++; else if(e.description.includes('ELE')) stats['ELE']++; else stats['MY']++; });
+            
+            if (chart) chart.destroy();
+            chart = new Chart(document.getElementById('segmentChart'), { type: 'doughnut', data: { labels: ['ECE', 'ELE', 'MY'], datasets: [{ data: [stats['ECE'], stats['ELE'], stats['MY']], backgroundColor: ['#fecaca', '#f87171', '#990b02'], borderWidth: 0 }] }, options: { cutout: '75%', plugins: { legend: { position: 'bottom' } } } });
+            document.getElementById('total-val').innerText = events.length;
+        }
+
+        setInterval(updateClock, 1000); setInterval(fetchData, 60000);
+        updateClock(); fetchData();
+    </script>
+</body>
+</html>
