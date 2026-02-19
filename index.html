@@ -96,7 +96,7 @@
     </div>
 
     <script>
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbM7Eq6n5OWlY8OorTMFnEFfaBBg5Wi5COGYI3vmMJvbjMo27aDVezzH97KejUJ3x6wVQ/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxMgUB-eAgzhrq9PFAZB-6ZYRa8J5Kgowt7j4pcbJMgaIsP6vHMPZLzEcyJzDMN3d2TkQ/exec';
         let currentEventId = null;
         let inputPass = "";
         let sessionHash = sessionStorage.getItem('mb_auth_hash');
@@ -184,20 +184,44 @@
         }
         
         document.getElementById('scheduleForm').onsubmit = async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btn-submit');
-            btn.disabled = true; document.getElementById('btn-text').innerText = "ENVIANDO...";
-            
-            const p = { 
-                action: 'create', 
-                nomeAluno: document.getElementById('nomeAluno').value, 
-                start: `${document.getElementById('form-data').value}T${document.getElementById('form-hora').value}:00`, 
-                turma: document.getElementById('turma').value, 
-                segmento: document.getElementById('segmento').value, 
-                psicologa: document.getElementById('psicologa').value, 
-                local: document.getElementById('local').value,
-                authHash: sessionHash
-            };
+    e.preventDefault();
+    const btn = document.getElementById('btn-submit');
+    const btnText = document.getElementById('btn-text');
+    
+    btn.disabled = true;
+    btnText.innerText = "CONECTANDO...";
+
+    const payload = { 
+        action: 'create', 
+        nomeAluno: document.getElementById('nomeAluno').value, 
+        start: `${document.getElementById('form-data').value}T${document.getElementById('form-hora').value}:00`, 
+        turma: document.getElementById('turma').value, 
+        segmento: document.getElementById('segmento').value, 
+        psicologa: document.getElementById('psicologa').value, 
+        local: document.getElementById('local').value,
+        authHash: sessionHash
+    };
+
+    try {
+        // Usamos o método 'sendBeacon' ou um fetch simplificado para evitar travamentos de CORS no POST
+        await fetch(SCRIPT_URL, { 
+            method: 'POST', 
+            mode: 'no-cors', // Isso evita que o navegador bloqueie o envio direto ao Google
+            body: JSON.stringify(payload) 
+        });
+
+        btnText.innerText = "SUCESSO!";
+        setTimeout(() => {
+            alert("Agendamento enviado! O calendário atualizará em instantes.");
+            location.reload();
+        }, 1000);
+
+    } catch (err) {
+        alert("Erro ao enviar. Tente novamente.");
+        btn.disabled = false;
+        btnText.innerText = "CRIAR AGENDAMENTO";
+    }
+};
             
             await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(p) });
             setTimeout(() => { alert("Agendamento concluído!"); location.reload(); }, 1500);
